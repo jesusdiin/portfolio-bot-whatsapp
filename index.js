@@ -1,22 +1,27 @@
-import { create } from '@open-wa/wa-automate';
+import {create, Client} from '@open-wa/wa-automate';
+import options from './config/options.js';
+import msgResponses from './messages/msgResponses.js';
 
-create({
-	sessionId: 'SESSION_ID',
-	multiDevice: true, //required to enable multiDevice support`
-	authTimeout: 60, //wait only 60 seconds to get a connection with the host account device
-	blockCrashLogs: true,
-	disableSpins: true,
-	headless: true,
-	hostNotificationLang: 'PT_BR',
-	logConsole: false,
-	popup: true,
-	qrTimeout: 0, //0 means it will wait forever for you to scan the qr code
-}).then(client => start(client));
 
-const start = (client) => {
-	client.onMessage(async message => {
-		if (message.body === 'Hi') {
-			await client.sendText(message.from, '👋 Hello!');
-		}
+const start = async (client = new Client()) => {
+	console.log('========================\n[SERVER] Server Started!\n========================');
+
+	client.onStateChanged((state) => {
+		console.log('[Client State]', state);
+		if (state === 'CONFLICT' || state === 'UNLAUNCHED') client.forceRefocus();
 	});
+
+	client.onMessage((async (message) => {
+		client.getAmountOfLoadedMessages()
+			.then((msg) => {
+				if (msg >= 3000) {
+					client.cutMsgCache();
+				}
+			});
+		msgResponses(client, message);
+	}));
 };
+
+create(options(true, start))
+	.then(client => start(client))
+	.catch((error) => console.log(error));
