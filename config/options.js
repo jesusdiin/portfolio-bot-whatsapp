@@ -1,6 +1,6 @@
 const options = (headless, start) => {
 	const options = {
-		sessionId: 'YinsSessionsId',
+		sessionId: 'www.jesushernandez.link',
 		headless: headless,
 		qrTimeout: 0,
 		authTimeout: 0,
